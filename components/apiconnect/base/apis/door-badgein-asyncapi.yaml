@@ -1,32 +1,33 @@
 asyncapi: 2.1.0
 info:
-  description: |-
-    Records an employee using their id badge to go through a door. This includes entry into the building overall, as well as entry through internal office doors.
-    
-    Building exits do not require use of id badge, so a door badge in event does not imply that the employee will still be in the building.
-    
-    Note that door events can take up to 3 minutes to reach the Kafka topic, so the badgetime value in the message payload should be treated as the canonical timestamp for the event.
-    
-    This delay can be inconsistent, so messages on the topic are often out of sequence as a result.
   title: DOOR.BADGEIN
   version: 1.0.0
-  x-ibm-summary: |-
-    Records an employee using their id badge to go through a door.
   x-ibm-name: DOOR.BADGEIN
   contact:
     email: andre@loosehangers.com
 tags:
   - name: operations
+  - name: json
 channels:
   DOOR.BADGEIN:
     bindings:
       kafka:
         partitions: 3
         replicas: 1
+    description: |-
+      Records an employee using their id badge to go through a door. This includes entry into the building overall, as well as entry through internal office doors.
+      
+      Building exits do not require use of id badge, so a door badge in event does not imply that the employee will still be in the building.
+      
+      Note that door events can take up to 3 minutes to reach the Kafka topic, so the badgetime value in the message payload should be treated as the canonical timestamp for the event.
+      
+      This delay can be inconsistent, so messages on the topic are often out of sequence as a result.
     subscribe:
       message:
-        payload: {"namespace":"com.loosehangerjeans","type":"record","name":"BadgeIn","fields":[{"name":"recordid","type":"string","logicalType":"uuid","doc":"badgeeventid"},{"name":"door","type":"string","doc":"Codeforthedoorthatrecordedtheevent.Doorcodesaremadeupofabuildingname,floornumber,anddoornumber,allseparatedbyhyphens(-)"},{"name":"employee","type":"string","doc":"useridassociatedwiththenamebadge"},{"name":"badgetime","type":"string","doc":"timethatthedoorentrywasrecorded"}]}
-        schemaFormat: application/vnd.apache.avro;version=1.9.0
+        examples:
+          - payload: {"recordid":"03c850e7-9a9a-4a7b-b778-e95d5bb693de","door":"G-0-26","employee":"milford.kling","badgetime":"2023-05-21 14:47:20.742"}
+        payload: {"$schema":"http://json-schema.org/draft-07/schema#","title":"BadgeIn","type":"object","properties":{"recordid":{"type":"string","format":"uuid","description":"Unique identifier for the record."},"door":{"type":"string","description":"ID of the door where the access event occurred. This is made up of a building ID, a floor number, and a door ID - separated by hyphens."},"employee":{"type":"string","description":"Employee&#x27;s username."},"badgetime":{"type":"string","pattern":"^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{1,3}$","description":"Timestamp when the badge was used, formatted as &#x27;YYYY-MM-DD HH:MM:SS.sss&#x27;."}},"required":["recordid","door","employee","badgetime"],"additionalProperties":false}
+        schemaFormat: application/schema+json;version=draft-07
 servers:
   cluster:
     url: $(bootstrapServerAddress)
@@ -46,12 +47,14 @@ x-ibm-configuration:
           title: invoke-kafka
           version: 1.0.0
           bootstrap.servers: $(bootstrapServerAddress)
-          clusterconfigid: eventstreams
+          clusterconfigid: f3c47d15-7498-4963-89cb-8103f6b6a102
   properties:
     bootstrapServerAddress:
       value: handled.by.eem
   type: asyncapi
   testable: false
-  x-ibm-eem: eventstreams
+  x-ibm-eem: f3c47d15-7498-4963-89cb-8103f6b6a102
+  x-ibm-eem-signature: W3PG98F52-FFT5mifSS86-HNQ6MfQn7sqZe3eAGAbzQ
   cors:
     enabled: false
+  gateway: event-gateway
